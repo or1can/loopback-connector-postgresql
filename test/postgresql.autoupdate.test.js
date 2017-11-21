@@ -63,6 +63,81 @@ describe('autoupdate', function() {
     });
   });
 
+  describe('should add property with default value', function() {
+    before(function(done) {
+      properties = {
+        name: {
+          type: String,
+        },
+        age: {
+          type: Number,
+        },
+        dateJoined: {
+          type: String,
+        },
+      };
+      SimpleEmployee = ds.define('SimpleEmployee', properties);
+      ds.automigrate(done);
+    });
+
+    after(function(done) {
+      SimpleEmployee.destroyAll(done);
+    });
+
+    it('get old model properties', function(done) {
+      ds.discoverModelProperties('simpleemployee', {schema: 'public'},
+        function(err, props) {
+          assert(!err);
+          assert.equal(props[0].default, null);
+          assert.equal(props[1].default, null);
+          assert.equal(props[2].default, null);
+          done();
+        });
+    });
+
+    it('perform autoupdate and get new numerical default properties', function(done) {
+      properties.employee_number = {
+        type: Number,
+        default: 5,
+      };
+      SimpleEmployee = ds.define('SimpleEmployee', properties);
+      ds.autoupdate(function(err) {
+        assert(!err);
+        ds.discoverModelProperties('simpleemployee', {schema: 'public'},
+          function(err, props) {
+            assert(!err);
+            assert.equal(props[0].default, null);
+            assert.equal(props[1].default, null);
+            assert.equal(props[2].default, null);
+            assert.equal(props[3].default, "nextval('simpleemployee_id_seq'::regclass)");
+            assert.equal(props[4].default, 5);
+            done();
+          });
+      });
+    });
+
+    it('perform autoupdate and get new string default properties', function(done) {
+      properties.address = {
+        type: String,
+        default: '{}',
+      };
+      SimpleEmployee = ds.define('SimpleEmployee', properties);
+      ds.autoupdate(function(err) {
+        assert(!err);
+        ds.discoverModelProperties('simpleemployee', {schema: 'public'},
+          function(err, props) {
+            assert(!err);
+            assert.equal(props[0].default, null);
+            assert.equal(props[1].default, null);
+            assert.equal(props[2].default, null);
+            assert.equal(props[3].default, "nextval('simpleemployee_id_seq'::regclass)");
+            assert.equal(props[4].default, 5);
+            done();
+          });
+      });
+    });
+  });
+
   describe('update model with same table name but different schema', function() {
     before(function(done) {
       properties = {
